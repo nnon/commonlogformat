@@ -1,0 +1,10 @@
+MANIFEST.in
+README.rst
+setup.py
+clfparser/__init__.py
+clfparser/test.py
+clfparser.egg-info/PKG-INFO
+clfparser.egg-info/SOURCES.txt
+clfparser.egg-info/dependency_links.txt
+clfparser.egg-info/not-zip-safe
+clfparser.egg-info/top_level.txt
