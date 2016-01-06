@@ -11,7 +11,7 @@ class CLFParser:
     commonLogFormat =   '(?P<h>([^ ]*)) (?P<l>([^ ]*)) (?P<u>([^ ]*)) (?P<t>\[([^]]*)\]) (?P<r>"([^"]*)") (?P<s>([^ ]*)) (?P<b>([^ ]*))'
     combinedLogFormat = '(?P<h>([^ ]*)) (?P<l>([^ ]*)) (?P<u>([^ ]*)) (?P<t>\[([^]]*)\]) (?P<r>"([^"]*)") (?P<s>([^ ]*)) (?P<b>([^ ]*)) (?P<Referer>"([^"]*)") (?P<Useragent>"([^"]*)")'
 
-    nullRec = {'h':"",'l':"",'u':"",'t':"",'r':"",'s':"",'b':"",'Referer':"",'Useragent':"",'time':"",'timezone':""}
+    nullRec = {'%h':"",'%l':"",'%u':"",'%t':"",'%r':"",'%s':"",'%b':"",'%Referer':"",'%Useragent':"",'%time':"",'%timezone':""}
 
     clfDict = {}
 
@@ -23,6 +23,9 @@ class CLFParser:
                 if (p == self.commonLogFormat):
                     self.clfDict.update({'Referer':"",'Useragent':""})
                 self.clfDict.update({'time' : datetime.strptime(self.clfDict['t'][1:21], '%d/%b/%Y:%H:%M:%S'),'timezone' : (self.clfDict['t'])[22:27]})
+                #added for 0.4 - amend dictionary keys to include leading % as per Apache documentation
+                for key in self.clfDict.keys():
+                    self.clfDict['%' + key] = self.clfDict.pop(key)
                 break
         else:
             self.clfDict = self.nullRec
@@ -38,8 +41,8 @@ class CLFParser:
         output = []
         for p in t:
             if (p == '%i{User-agent}'):
-                p = 'Useragent'
+                p = '%Useragent'
             if (p == '%i{Referer}'):
-                p = 'Referer'
-            output.append(w.clfDict[p.replace('%', '')])
+                p = '%Referer'
+            output.append(w.clfDict[p])
         return output

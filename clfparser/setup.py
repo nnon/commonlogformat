@@ -5,14 +5,15 @@ def readme():
         return f.read()
 
 setup(name='clfparser',
-      version='0.2',
+      version='0.4',
       description='Apache Common/Combined Log Format Parser',
       long_description=readme(),
       classifiers=[
          'Development Status :: 3 - Alpha',
          'License :: OSI Approved :: MIT License',
          'Programming Language :: Python :: 2.7',
-         'Topic :: Text Processing'
+         'Topic :: Text Processing',
+         'Topic :: Internet :: Log Analysis'
       ],
       keywords='apache common combined log spark',
       url='http://github.com/nnon/commonlogformat.git',

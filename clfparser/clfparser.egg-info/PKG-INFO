@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: clfparser
-Version: 0.2
+Version: 0.4
 Summary: Apache Common/Combined Log Format Parser
 Home-page: http://github.com/nnon/commonlogformat.git
 Author: Rob Mackinnon
@@ -9,55 +9,84 @@ License: MIT
 Description: Apache Common/Combined Log Parser
         ---------------------------------
         
-        Parses Apache common/combined web log format records. 
+        Parses a single Apache web log format record. The parser wil first attempt to match a combined format record, if this fails it will attempt to match a common format record. In the event that the record matches neither pattern, a null record will be returned.
         
-        Returns either a dictionary representing the entire record or a list of specified objects. 
+        To return a dictionary representing the entire record or a list of specified objects call CLFParser.logDict(record), passing a single log record::
         
-        To use::
+            >>> from clfparser import CLFParser
+            >>> logRecord='10.223.157.186 - - [15/Jul/2009:14:58:59 -0700] "GET /favicon.ico HTTP/1.1" 404 209'
+            >>> clfDict=CLFParser.logDict(logRecord)
+            >>> print clfDict
+            {'%b': '209', '%h': '10.223.157.186', '%time': datetime.datetime(2009, 7, 15, 14, 58, 59), '%l': '-', '%Referer': '',
+            '%s': '404', '%r': '"GET /favicon.ico HTTP/1.1"', '%u': '-', '%t': '[15/Jul/2009:14:58:59 -0700]', '%timezone': '-0700', '%Useragent': ''}
         
-            from clfparser import CLFParser
+        To return a subset of the log record as a list, call CLFParser.logParts(record, formatMask). where formatMask is a quoted string listing the log items required in the output::
         
-            test='10.223.157.186 - - [15/Jul/2009:14:58:59 -0700] "GET /favicon.ico HTTP/1.1" 404 209'
+            >>> clfParts=CLFParser.logParts(test,'%h %time')
+            >>> print clfParts
+            ['10.223.157.186', datetime.datetime(2009, 7, 15, 14, 58, 59)]
+        
+        To use with Apache Spark::
+        
+            >>> from clfparser import CLFParser
+            >>> accLog = sc.textFile("access_log", 2).cache()
             
-            #return dictionary
-            clfDict=CLFParser.logDict(test)
-        
-            #return list containing host, log time and a datetime object representing the log time
-            clfList=CLFParser.logParts(test, '%h %t %time')
+            >>> logDict = accLog.map(lambda logRec: CLFParser.logDict(logRec))
+            >>> logDict.first()
+            {'%b': u'202', '%h': u'10.223.157.186', '%l': u'-', '%timezone': u'-0700', '%s': u'403', '%r': u'"GET / HTTP/1.1"', '%Referer': '', '%t': u'[15/Jul/2009:14:58:59 -0700]', 
+            '%time': datetime.datetime(2009, 7, 15, 14, 58, 59), '%u': u'-', '%Useragent': ''}
+            
+            >>> logParts = accLog.map(lambda logRec: CLFParser.logParts(logRec, '%h %t'))
+            >>> logParts.first()
+            [u'10.223.157.186', u'[15/Jul/2009:14:58:59 -0700]']
         
         Common Log Format
         -----------------
         
         Described by::
         
-            "%h %l %u %t \"%r\" %>s %b"
+            '%h %l %u %t \"%r\" %>s %b'
         
         Where:
         
-        %h - host
-        %l - identity
-        %u - userid
-        %t - time
-        %r - request
-        %>s - status
-        %b - size
+        - *%h* - host
+        - *%l* - identity
+        - *%u* - userid
+        - *%t* - time
+        - *%r* - request
+        - *%>s* - status
+        - *%b* - size
         
         Combined Log Format
         -------------------
         
         As Common Log Format with the addition of 2 further fields::
         
-            "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
+            '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"'
         
         Where:
         
-        %{Referer}i - HTTP request header referer
-        %{User-agent}i - HTTP request header user agent
+        - *%{Referer}i* - HTTP request header referer
+        - *%{User-agent}i* - HTTP request header user agent
         
         Additional Fields
         -----------------
         
         In addition to the standard log fields, clfparser also parses the log time field, *%t*, to create a Python datetime object *%time* and a string object representing the timezone, *timezone*.
+        
+        Installation
+        ------------
+        
+        Install using **pip**::
+        
+            pip install clfparser
+        
+        To Do
+        -----
+        
+        - Performance improvements
+        - Command line tools
+        - Identify request resource as an additional data item
         
 Keywords: apache common combined log spark
 Platform: UNKNOWN
@@ -65,3 +94,4 @@ Classifier: Development Status :: 3 - Alpha
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Topic :: Text Processing
+Classifier: Topic :: Internet :: Log Analysis
